@@ -17,29 +17,27 @@ def fetchProxies():
     with open('proxies.txt', 'wb') as proxyFile:
         proxyFile.write(reqs.content)
 
-def generateCode(iterations, savePrompt):
-    generatedRandCode = []
-    for i in range(0, iterations):
-        generatedRandCode.append("".join(random.choices(string.ascii_letters + string.digits, k=16)))
-
-    if (savePrompt.lower() == 'y'):
-        with open('random_codes.txt', 'w') as codeFile:
-            codeFile.writelines(f"{i}\n" for i in generatedRandCode)
-
-    elif (savePrompt.lower() == 'n'):
-        pass
+def generateCode(iterations):
+    with open('random_codes.txt', 'w') as codeFile:
+        for i in range(0, iterations):
+            if (i < iterations - 1):
+                codeFile.write("%s\n" % ("".join(random.choices(string.ascii_letters + string.digits, k=16))))
+            else:
+                codeFile.write("%s" % ("".join(random.choices(string.ascii_letters + string.digits, k=16))))
 
     checkPrompt = input("Do you wanna check the code validity? (Y/N) : ")
     if (checkPrompt.lower() == 'y'):
-        checkCode(generatedRandCode)
+        checkCode()
     elif (checkPrompt.lower() == 'n'):
         pass
 
-def checkCode(randCodes):
+def checkCode():
     fetchProxies()
     with open('proxies.txt', 'rb') as proxyFile:
         proxyList = proxyFile.read().decode().split('\r\n')
-    
+    with open('random_codes.txt', 'r') as codeFile:
+        randCodes = codeFile.read().split('\n')
+
     proxyLen = len(proxyList)
     codeLen = len(randCodes)
 
@@ -90,7 +88,7 @@ def checkCode(randCodes):
                 
                 if (proxyIndex < proxyLen):
                     pass
-                    # print(f"Rate Limited, changing proxy to {proxyList[proxyIndex]}...")
+                    print(f"Rate Limited, changing proxy to {proxyList[proxyIndex]}...")
                 else:
                     print("Rate Limited, EOF proxy lists, terminating...")
                     exit()
@@ -99,12 +97,12 @@ def checkCode(randCodes):
                 print(f"Invalid | https://discord.gift/{randCodes[codeIndex]}")
                 codeIndex += 1
         except (requests.exceptions.SSLError, requests.exceptions.ProxyError, requests.exceptions.InvalidProxyURL) as proxyError:
-            # print(f"Proxy error, next proxy..., because of {proxyError}")
+            print(f"Proxy error, next proxy..., because of {proxyError}")
             proxyIndex += 1
 
 if __name__ == '__main__':
     iters = int(input("Input how many codes will be generated : "))
-    save = input("Wanna save to the random_codes.txt file (NOTE : Existing files will be overwritten) [Y/N] : ")
+    # save = input("Wanna save to the random_codes.txt file (NOTE : Existing files will be overwritten) [Y/N] : ")
     webhook_url = r"https://discord.com/api/webhooks/833567160890425365/rPR308UwFUq3BiN9htEGoSq6_eO7qei0TH3ZR715SEAs7wZlYs8NHA_y8IS4-lmcwUDD"
 
-    generateCode(iters, save)
+    generateCode(iters)
