@@ -1,6 +1,6 @@
 # EVERY 5 API REQUESTS SIMULTANEOUSLY, COOLDOWN INCREASES
 
-import os, random, string, requests, json 
+import os, random, string, requests, json, time, math
 
 webhook_url = ""
 
@@ -32,73 +32,49 @@ def generateCode(iterations):
         pass
 
 def checkCode():
-    fetchProxies()
-    with open('proxies.txt', 'rb') as proxyFile:
-        proxyList = proxyFile.read().decode().split('\r\n')
     with open('random_codes.txt', 'r') as codeFile:
         randCodes = codeFile.read().split('\n')
+    
+    for i in randCodes:
+        base_url = "https://discordapp.com/api/v6/entitlements/gift-codes/"
+        url_request = f"{base_url}{i}"
 
-    proxyLen = len(proxyList)
-    codeLen = len(randCodes)
+        request = requests.get(url_request)
 
-    proxyIndex = 0
-    codeIndex = 0
-    while (codeIndex < codeLen) and (proxyIndex < proxyLen):
-        try:
-            base_url = "https://discordapp.com/api/v6/entitlements/gift-codes/"
-            url_request = f"{base_url}{randCodes[codeIndex]}"
-
-            # PROXY SELECT
-            proxy_query = { 
-                "http" : f"http://{proxyList[proxyIndex]}",
-                "https" : f"http://{proxyList[proxyIndex]}"
+        if (request.status_code == 200):
+            appData = request.json()
+            nitro = {
+                'name' : appData['store_listing']['sku']['name'],
+                'max_use' : appData['max_uses'],
+                'current_use' : appData['uses']
             }
-
-            request = requests.get(url_request, proxies=proxy_query)
-
-            if (request.status_code == 200):
-                appData = request.json()
-                nitro = {
-                    'name' : appData['store_listing']['sku']['name'],
-                    'max_use' : appData['max_uses'],
-                    'current_use' : appData['uses']
-                }
-                if ((nitro['max_use'] - nitro['current_use']) > 0):
-                    canBeClaimed_stringConst = "**THIS CODE IS UNCLAIMED OR CLAIM-ABLE, GO REDEEM NOW!**"
-                else:
-                    canBeClaimed_stringConst = "**THIS CODE HAS BEEN CLAIMED!**"
-
-                finalCodeFound = f"""**--------- CODE FOUND ---------**
-                
-                **Gift code link : https://discord.gift/{randCodes[codeIndex]}**
-                Type : {nitro['name']}
-                Current Uses : {nitro['current_use']}
-                Max Uses : {nitro['max_use']}
-                
-                {canBeClaimed_stringConst} @everyone\n"""
-
-                print(f"Code found, {randCodes[codeIndex]}, sending to the binded webhook")
-                
-                theWebhook = DiscordWebhook(url=webhook_url, content=finalCodeFound)
-                theWebhook.execute()
-                codeIndex += 1
-
-            elif (request.status_code == 429):
-                proxyIndex += 1
-                
-                if (proxyIndex < proxyLen):
-                    pass
-                    print(f"Rate Limited, changing proxy to {proxyList[proxyIndex]}...")
-                else:
-                    print("Rate Limited, EOF proxy lists, terminating...")
-                    exit()
-
+            if ((nitro['max_use'] - nitro['current_use']) > 0):
+                canBeClaimed_stringConst = "**THIS CODE IS UNCLAIMED OR CLAIM-ABLE, GO REDEEM NOW!**"
             else:
-                print(f"Invalid | https://discord.gift/{randCodes[codeIndex]}")
-                codeIndex += 1
-        except (requests.exceptions.SSLError, requests.exceptions.ProxyError, requests.exceptions.InvalidProxyURL) as proxyError:
-            print(f"Proxy error, next proxy..., because of {proxyError}")
-            proxyIndex += 1
+                canBeClaimed_stringConst = "**THIS CODE HAS BEEN CLAIMED!**"
+
+            finalCodeFound = f"""**--------- CODE FOUND ---------**
+            
+            **Gift code link : https://discord.gift/{i}**
+            Type : {nitro['name']}
+            Current Uses : {nitro['current_use']}
+            Max Uses : {nitro['max_use']}
+            
+            {canBeClaimed_stringConst} @everyone\n"""
+
+            print(f"Code found, {i}, sending to the binded webhook")
+            
+            theWebhook = DiscordWebhook(url=webhook_url, content=finalCodeFound)
+            theWebhook.execute()
+            codeIndex += 1
+
+        elif (request.status_code == 429):
+            delay = math.ceil(request.json()['retry_after'] / 1000)
+            print("Rate limited, delaying on %d seconds" % delay)
+            time.sleep(delay)
+
+        else:
+            print(f"Invalid | https://discord.gift/{i}")
 
 if __name__ == '__main__':
     iters = int(input("Input how many codes will be generated : "))
