@@ -34,10 +34,12 @@ def generateCode(iterations):
 def checkCode():
     with open('random_codes.txt', 'r') as codeFile:
         randCodes = codeFile.read().split('\n')
-    
-    for i in randCodes:
+
+    codeLen = len(randCodes)
+    codeIndex = 0
+    while (codeIndex < codeLen):
         base_url = "https://discordapp.com/api/v6/entitlements/gift-codes/"
-        url_request = f"{base_url}{i}"
+        url_request = f"{base_url}{randCodes[codeIndex]}"
 
         request = requests.get(url_request)
 
@@ -55,14 +57,14 @@ def checkCode():
 
             finalCodeFound = f"""**--------- CODE FOUND ---------**
             
-            **Gift code link : https://discord.gift/{i}**
+            **Gift code link : https://discord.gift/{randCodes[codeIndex]}**
             Type : {nitro['name']}
             Current Uses : {nitro['current_use']}
             Max Uses : {nitro['max_use']}
             
-            {canBeClaimed_stringConst} @everyone\n"""
+            {canBeClaimed_stringConst} @everyone"""
 
-            print(f"Code found, {i}, sending to the binded webhook")
+            print(f"Code found, {randCodes[codeIndex]}, sending to the binded webhook")
             
             theWebhook = DiscordWebhook(url=webhook_url, content=finalCodeFound)
             theWebhook.execute()
@@ -74,7 +76,8 @@ def checkCode():
             time.sleep(delay)
 
         else:
-            print(f"Invalid | https://discord.gift/{i}")
+            print(f"Invalid | https://discord.gift/{randCodes[codeIndex]}")
+            codeIndex += 1
 
 if __name__ == '__main__':
     iters = int(input("Input how many codes will be generated : "))
