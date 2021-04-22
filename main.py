@@ -1,6 +1,6 @@
 # EVERY 5 API REQUESTS SIMULTANEOUSLY, COOLDOWN INCREASES
 
-import os, random, string, requests, json, time, math
+import os, random, string, requests, json, time, math, os
 
 webhook_url = ""
 
@@ -27,6 +27,7 @@ def generateCode(iterations):
 
     checkPrompt = input("Do you wanna check the code validity? (Y/N) : ")
     if (checkPrompt.lower() == 'y'):
+        print('\n--- START ---')
         checkCode()
     elif (checkPrompt.lower() == 'n'):
         pass
@@ -37,6 +38,7 @@ def checkCode():
 
     codeLen = len(randCodes)
     codeIndex = 0
+    valids = 0
     while (codeIndex < codeLen):
         base_url = "https://discordapp.com/api/v6/entitlements/gift-codes/"
         url_request = f"{base_url}{randCodes[codeIndex]}"
@@ -64,24 +66,34 @@ def checkCode():
             
             {canBeClaimed_stringConst} @everyone"""
 
-            print(f"Code found, {randCodes[codeIndex]}, sending to the binded webhook")
+            print(f"{codeIndex + 1} | Code found -> https://discord.gift/{randCodes[codeIndex]}, sending to the binded webhook | Valid : {valids}")
             
             theWebhook = DiscordWebhook(url=webhook_url, content=finalCodeFound)
             theWebhook.execute()
+            valids += 1
             codeIndex += 1
 
         elif (request.status_code == 429):
             delay = math.ceil(request.json()['retry_after'] / 1000)
-            print("Rate limited, delaying on %d seconds" % delay)
+            print("Rate limited, delaying on %d seconds | Valids = %d" % (delay, valids))
             time.sleep(delay)
 
         else:
-            print(f"Invalid | https://discord.gift/{randCodes[codeIndex]}")
+            print(f"{codeIndex + 1} | Invalid | https://discord.gift/{randCodes[codeIndex]} | Valids = {valids}")
             codeIndex += 1
 
+def welcomingMessage():
+    print("---- DISCORD NITRO GENERATOR by oxx\n---- Version : 0.01 beta 1\n")
+
 if __name__ == '__main__':
+    if (os.name == 'nt'):
+        os.system('cls')
+    elif (os.name == 'posix'):
+        os.system('clear')
+    
+    welcomingMessage()
     iters = int(input("Input how many codes will be generated : "))
-    # save = input("Wanna save to the random_codes.txt file (NOTE : Existing files will be overwritten) [Y/N] : ")
-    webhook_url = r"https://discord.com/api/webhooks/833567160890425365/rPR308UwFUq3BiN9htEGoSq6_eO7qei0TH3ZR715SEAs7wZlYs8NHA_y8IS4-lmcwUDD"
+    webhook_url = r"" # PUT YOUR SERVER WEBHOOK HERE
 
     generateCode(iters)
+    print('--- END ---')
