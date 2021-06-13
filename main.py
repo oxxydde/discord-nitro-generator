@@ -23,12 +23,12 @@ def generateCode(iterations):
     elif (checkPrompt.lower() == 'n'):
         pass
 
-def checkCode():
+def checkCode(char_length):
     codeIndex = 0
     valids = 0
     with open('valid_codes.txt', 'w') as validFile:
         while True:
-            randCode = "".join(random.choices(string.ascii_letters + string.digits, k=16))
+            randCode = "".join(random.choices(string.ascii_letters + string.digits, k=char_length))
             base_url = "https://discordapp.com/api/v6/entitlements/gift-codes/"
             url_request = f"{base_url}{randCode}"
 
@@ -59,14 +59,24 @@ def checkCode():
 
 def welcomingMessage():
     print("---- DISCORD NITRO GENERATOR by oxx\n---- Version : 0.01 beta 1\n")
+    print("Select length of Nitro Code :\n1. 16 characters (Classic)\n2. 24 characters (Nitro + Boost)\n")
+    len_char = int(input("INPUT : "))
+    if (len_char == 1):
+        return 16
+    elif (len_char == 2):
+        return 24
+    else:
+        return -1
 
 if __name__ == '__main__':
     if (os.name == 'nt'):
         os.system('cls')
     elif (os.name == 'posix'):
         os.system('clear')
-    
-    welcomingMessage()
-    
-    checkCode()
+
+    lengg = welcomingMessage()
+    if (lengg > 0):
+        checkCode(lengg)
+    else:
+        print("Wrong input!")
     print('--- END ---')
