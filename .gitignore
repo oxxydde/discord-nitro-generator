@@ -2,3 +2,6 @@
 .gitignore
 *.json
 *.txt
+__pycache__
+proxy_test.py
+main.exe
