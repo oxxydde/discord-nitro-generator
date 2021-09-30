@@ -37,8 +37,8 @@ def checkCode(char_length):
         while True:
             try:
                 randCode = "".join(random.choices(string.ascii_letters + string.digits, k=char_length))
-                base_url = "https://discordapp.com/api/v6/entitlements/gift-codes/"
-                url_request = f"{base_url}{randCode}"
+                base_url = "https://discordapp.com/api/v9/entitlements/gift-codes/"
+                url_request = f"{base_url}{randCode}?with_application=false&with_subscription_plan=true"
 
                 proxyreq = {
                     'http': f"{proxyLists[proxyListsIndex]['protocols'][0]}://{proxyLists[proxyListsIndex]['ip']}:{proxyLists[proxyListsIndex]['port']}",
